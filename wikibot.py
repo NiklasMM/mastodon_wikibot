@@ -34,7 +34,8 @@ def toot(text):
         access_token=ACCESS_TOKEN
     )
 
-    mastodon.status_post(text, visibility="direct")
+    # On most instances bots are not allowed to post publically
+    mastodon.status_post(text, visibility="unlisted")
 
 def load_feed_and_get_entry_for_today():
     """

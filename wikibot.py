@@ -175,6 +175,6 @@ if __name__ == "__main__":
             print(toot_text)
         else:
             toot(toot_text)
-            print("Successfully tooted!")
+            print("{0}: Successfully tooted!".format(datetime.datetime.now().isoformat()))
     else:
-        print("Nothing to toot about.")
+        print("{0}: Nothing to toot about.".format(datetime.datetime.now().isoformat()))

@@ -76,8 +76,16 @@ def parse_feed_item(feed_item):
             "text": li.get_text(),
             "links": [],
             "year_link": None,
+            "year": None,
             "image": None
         }
+
+        # find integer value for year. Assume text always begins with year.
+        m = re.match(r"^(\d+)", entry["text"])
+        if m:
+            entry["year"] = int(m.group(1))
+        else:
+            raise Exception("Text does not start with year??")
 
         first_regular_link_found = False
 
@@ -104,18 +112,20 @@ def parse_feed_item(feed_item):
         entries.append(entry)
     return entries
 
-def toot_about_item(item):
+def prepare_toot(item):
     """
-        Take an item as returned by parse_feed_item and toot
-        about it.
+        Take an item as returned by parse_feed_item and format
+        a toot.
     """
-    toot_text = item["text"]
+    toot_text = "Heute vor {0} Jahren:\n\n".format(
+        datetime.date.today().year - item["year"]
+    )
+    toot_text = toot_text + item["text"]
 
     if len(item["links"]) > 0:
         toot_text = "\n\n".join((toot_text, item["links"][0]))
 
-    toot(toot_text)
-
+    return toot_text
 
 def get_feed_entry_for_today():
     """
@@ -140,6 +150,11 @@ def get_feed_entry_for_today():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Toot about events on this day')
+    parser.add_argument('--dry-run', action="store_true", help="If given only prints the content of the toot")
+    parser.add_argument(
+        '--item', type=int,
+        help="Selects the feed item to be processed. If not given item is selected according to schedule."
+    )
     parser.add_argument('access_token', type=str, help='access token for the targeted Mastodon account.')
 
     args = parser.parse_args()
@@ -149,9 +164,17 @@ if __name__ == "__main__":
 
     entries = parse_feed_item(feed_item)
 
-    hour_of_day = datetime.datetime.now().hour
-    if hour_of_day in TOOT_SCHEDULE:
-        toot_about_item(entries[TOOT_SCHEDULE[hour_of_day]])
-        print("Successfully tooted!")
+    item = args.item
+    if item is None:
+        hour_of_day = datetime.datetime.now().hour
+        item = TOOT_SCHEDULE.get(hour_of_day, None)
+
+    if item is not None:
+        toot_text = prepare_toot(entries[item])
+        if args.dry_run:
+            print(toot_text)
+        else:
+            toot(toot_text)
+            print("Successfully tooted!")
     else:
         print("Nothing to toot about.")

@@ -2,6 +2,8 @@ import argparse
 import datetime
 import json
 import re
+import tempfile
+import urllib.request
 
 from mastodon import Mastodon
 import feedparser
@@ -10,8 +12,6 @@ import feedparser
 FEED_URL = 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=atom'
 CACHE_FILE = "/tmp/wikibot.cache"
 WIKIPEDIA_PREFIX = "https://de.wikipedia.org"
-
-ACCESS_TOKEN = None
 
 # A simple toot schedule, telling the bot at which hour of
 # the day it should toot about which feed item entry.
@@ -27,15 +27,6 @@ TOOT_SCHEDULE = {
 def parse_date_from_timestamp(timestamp):
     """ Parses a date object from a feed timestamp"""
     return datetime.datetime.strptime(timestamp, r"%Y-%m-%dT%H:%M:%SZ").date()
-
-def toot(text):
-    mastodon = Mastodon(
-        api_base_url = 'https://chaos.social',
-        access_token=ACCESS_TOKEN
-    )
-
-    # On most instances bots are not allowed to post publically
-    mastodon.status_post(text, visibility="unlisted")
 
 def load_feed_and_get_entry_for_today():
     """
@@ -68,7 +59,6 @@ def parse_feed_item(feed_item):
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(feed_item["summary"], features="html.parser")
-
     entries = []
 
     for li in soup.find_all("li"):
@@ -94,9 +84,28 @@ def parse_feed_item(feed_item):
             href = a.get("href")
             full_url = WIKIPEDIA_PREFIX + href
 
-            # We assume that any link to a file is an image
-            if href.startswith("/wiki/Datei:"):
-                entry["image"] = full_url
+            images = a.find_all("img")
+            # If there are any images, we handle the first one and use it for a media post
+            if len(images) > 0:
+                image = images[0]
+
+                # find the largest image file
+                # "srcset" contains alternate image files in different sizes.
+                # The format is a comma separated list of "<url> <size>x", e.g. 1.5x, 2x, etc..
+                # We parse these and select the url with the max size
+                candidates = [image.get("src") + " 1x"] + image.get("srcset").split(",")
+                tmp = []
+                for candidate in candidates:
+                    candidate = candidate.strip()
+                    url, size = candidate.split()
+                    size = float(size.strip("x"))
+                    tmp.append((size, url))
+                url = sorted(tmp)[-1][1]
+
+                entry["image"] = {
+                    "url": "https:" + url,
+                    "alt_text": image.get("alt")
+                }
                 continue
 
             # Assume a link with only numbers is a year link
@@ -148,6 +157,24 @@ def get_feed_entry_for_today():
 
     return data
 
+def create_media_post(entry, mastodon):
+    """
+        Takes an entry and a mastodon instance, generates a media post with the entry["image"]
+        if present and returns the obtained media_dict.
+        If no image is present, returns None.
+    """
+    if entry["image"] is None:
+        return None
+    url = entry["image"]["url"]
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        # download image
+        extension = url.split(".")[-1]
+        image_filename = tmpdirname + "/image.{ext}".format(ext=extension)
+        urllib.request.urlretrieve(url, image_filename)
+
+        # create media post
+        return mastodon.media_post(image_filename, description=entry["image"]["alt_text"])
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Toot about events on this day')
     parser.add_argument('--dry-run', action="store_true", help="If given only prints the content of the toot")
@@ -158,8 +185,6 @@ if __name__ == "__main__":
     parser.add_argument('access_token', type=str, help='access token for the targeted Mastodon account.')
 
     args = parser.parse_args()
-    ACCESS_TOKEN = args.access_token
-
     feed_item = get_feed_entry_for_today()
 
     entries = parse_feed_item(feed_item)
@@ -170,11 +195,17 @@ if __name__ == "__main__":
         item = TOOT_SCHEDULE.get(hour_of_day, None)
 
     if item is not None:
-        toot_text = prepare_toot(entries[item])
+        entry = entries[item]
+        toot_text = prepare_toot(entry)
         if args.dry_run:
             print(toot_text)
         else:
-            toot(toot_text)
+            mastodon = Mastodon(
+                api_base_url = 'https://chaos.social',
+                access_token=args.access_token
+            )
+            media_dict = create_media_post(entry, mastodon)
+            mastodon.status_post(toot_text, visibility="unlisted", media_ids=media_dict)
             print("{0}: Successfully tooted!".format(datetime.datetime.now().isoformat()))
     else:
         print("{0}: Nothing to toot about.".format(datetime.datetime.now().isoformat()))

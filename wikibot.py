@@ -93,7 +93,9 @@ def parse_feed_item(feed_item):
                 # "srcset" contains alternate image files in different sizes.
                 # The format is a comma separated list of "<url> <size>x", e.g. 1.5x, 2x, etc..
                 # We parse these and select the url with the max size
-                candidates = [image.get("src") + " 1x"] + image.get("srcset").split(",")
+                candidates = [image.get("src") + " 1x"]
+                if image.get("srcset"):
+                    candidates += image.get("srcset").split(",")
                 tmp = []
                 for candidate in candidates:
                     candidate = candidate.strip()

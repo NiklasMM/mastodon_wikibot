@@ -82,7 +82,6 @@ def parse_feed_item(feed_item):
         # iterate over all links in the entry
         for a in li.find_all("a"):
             href = a.get("href")
-            full_url = WIKIPEDIA_PREFIX + href
 
             images = a.find_all("img")
             # If there are any images, we handle the first one and use it for a media post
@@ -103,22 +102,21 @@ def parse_feed_item(feed_item):
                     size = float(size.strip("x"))
                     tmp.append((size, url))
                 url = sorted(tmp)[-1][1]
-
                 entry["image"] = {
-                    "url": "https:" + url,
+                    "url": url,
                     "alt_text": image.get("alt")
                 }
                 continue
 
             # Assume a link with only numbers is a year link
-            possible_year_link = re.match(r"^\/wiki\/\d+$", href)
+            possible_year_link = re.match(r".*\/wiki\/\d+$", href)
 
             # Only make a link the year_link if it appears before
             # any other regular link
             if not first_regular_link_found and possible_year_link:
-                entry["year_link"] = full_url
+                entry["year_link"] = href
             else:
-                entry["links"].append(full_url)
+                entry["links"].append(href)
                 first_regular_link_found = True
         entries.append(entry)
     return entries

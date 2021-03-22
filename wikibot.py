@@ -89,7 +89,13 @@ def parse_feed_item(feed_item):
         # find integer value for year. Assume text always begins with year.
         m = re.match(r"^(\d+)", entry["text"])
         if m:
-            entry["year"] = int(m.group(1))
+            # first check if year has a trailing "v. Chr."
+            is_bc = re.match(r"^(\d+\xa0v\.\xa0Chr\.)", entry["text"])
+            if is_bc:
+                # add a minus sign to year, so later calculations yield a correct result
+                entry["year"] = int("-"+m.group(1)) +1
+            else:
+                entry["year"] = int(m.group(1))
         else:
             raise Exception("Text does not start with year??")
 

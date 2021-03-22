@@ -28,6 +28,22 @@ def parse_date_from_timestamp(timestamp):
     """ Parses a date object from a feed timestamp"""
     return datetime.datetime.strptime(timestamp, r"%Y-%m-%dT%H:%M:%SZ").date()
 
+def load_feed_and_get_entry_for_date(date):
+    """
+        Loads the feed and returns the feed item for a specific date.
+        Raises Exception if no entry for that date can be found
+    """
+    feed = feedparser.parse(FEED_URL)
+
+    for entry in feed["items"]:
+        # The "updated" timestamp always corresponds to the day the entry is about
+        if parse_date_from_timestamp(entry["updated"]) == date:
+            return entry
+    else:
+        raise Exception("Could not find feed entry for today.")
+
+
+
 def load_feed_and_get_entry_for_today():
     """
         Loads the feed and returns the feed item for today.
@@ -73,7 +89,13 @@ def parse_feed_item(feed_item):
         # find integer value for year. Assume text always begins with year.
         m = re.match(r"^(\d+)", entry["text"])
         if m:
-            entry["year"] = int(m.group(1))
+            # first check if year has a trailing "v. Chr."
+            is_bc = re.match(r"^(\d+\xa0v\.\xa0Chr\.)", entry["text"])
+            if is_bc:
+                # add a minus sign to year, so later calculations yield a correct result
+                entry["year"] = int("-"+m.group(1)) +1
+            else:
+                entry["year"] = int(m.group(1))
         else:
             raise Exception("Text does not start with year??")
 
@@ -136,6 +158,27 @@ def prepare_toot(item):
 
     return toot_text
 
+def get_feed_entry_for_date(date):
+    """
+        Get the feed entry for the specified date.
+        First tries to load the entry from a cached file and falls
+        back to actually loading the feed from wikipedia.
+    """
+
+    try:
+        with open(CACHE_FILE) as f:
+            data = f.read()
+        data = json.loads(data)
+    except IOError:
+        data = None
+    d = datetime.date.fromisoformat(date)
+    if data is None or parse_date_from_timestamp(data["updated"]) != d:
+        data = load_feed_and_get_entry_for_date(d)
+    with open(CACHE_FILE, "w") as f:
+        f.write(json.dumps(data))
+
+    return data
+
 def get_feed_entry_for_today():
     """
         Get the feed entry for today.
@@ -182,10 +225,16 @@ if __name__ == "__main__":
         '--item', type=int,
         help="Selects the feed item to be processed. If not given item is selected according to schedule."
     )
+    parser.add_argument('--date', help='data in iso-format')
     parser.add_argument('access_token', type=str, help='access token for the targeted Mastodon account.')
 
     args = parser.parse_args()
-    feed_item = get_feed_entry_for_today()
+
+    date = args.date
+    if date is not None:
+        feed_item = get_feed_entry_for_date(date)
+    else:
+        feed_item = get_feed_entry_for_today()
 
     entries = parse_feed_item(feed_item)
 

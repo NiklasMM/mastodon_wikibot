@@ -1,0 +1,11 @@
+[project]
+name = "mastodon-wikibot"
+version = "0.2.0"
+description = "A simple bot for mastodon, which posts the content of Wikipedia's 'on this day' feed during the day."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.14.0",
+    "feedparser>=6.0.12",
+    "mastodon-py==1.5.1",
+]

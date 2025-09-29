@@ -6,34 +6,31 @@ import re
 import tempfile
 import urllib.request
 
-from mastodon import Mastodon
 import feedparser
 from dotenv import load_dotenv
+from mastodon import Mastodon
+
 load_dotenv()
 
-FEED_URL = 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=atom'
+FEED_URL = "https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=atom"
 CACHE_FILE = "/tmp/wikibot.cache"
 WIKIPEDIA_PREFIX = "https://de.wikipedia.org"
 
 # A simple toot schedule, telling the bot at which hour of
 # the day it should toot about which feed item entry.
 # This is currently hardcoded for feed items with 5 entries.
-TOOT_SCHEDULE = {
-    8: 0,
-    10: 1,
-    12: 2,
-    14: 3,
-    16: 4
-}
+TOOT_SCHEDULE = {8: 0, 10: 1, 12: 2, 14: 3, 16: 4}
+
 
 def parse_date_from_timestamp(timestamp):
-    """ Parses a date object from a feed timestamp"""
+    """Parses a date object from a feed timestamp"""
     return datetime.datetime.strptime(timestamp, r"%Y-%m-%dT%H:%M:%SZ").date()
+
 
 def load_feed_and_get_entry_for_today():
     """
-        Loads the feed and returns the feed item for today.
-        Raises Exception if no entry for today can be found
+    Loads the feed and returns the feed item for today.
+    Raises Exception if no entry for today can be found
     """
     feed = feedparser.parse(FEED_URL)
 
@@ -44,19 +41,20 @@ def load_feed_and_get_entry_for_today():
     else:
         raise Exception("Could not find feed entry for today.")
 
+
 def parse_feed_item(feed_item):
     """
-        Takes a dict representing a feed item for today and generates
-        a strucutred dict from it:
-        {
-            "text": The plain text of this entry,
-            "links": List of all links in this entry, which do not
-                     link to the year or an image file.
-            "year_link": Link to the article of the year (can be None)
-            "image": Link to an image file (can be None)
-        }
+    Takes a dict representing a feed item for today and generates
+    a strucutred dict from it:
+    {
+        "text": The plain text of this entry,
+        "links": List of all links in this entry, which do not
+                 link to the year or an image file.
+        "year_link": Link to the article of the year (can be None)
+        "image": Link to an image file (can be None)
+    }
 
-        All links are fully qualified URLs
+    All links are fully qualified URLs
     """
     from bs4 import BeautifulSoup
 
@@ -69,7 +67,7 @@ def parse_feed_item(feed_item):
             "links": [],
             "year_link": None,
             "year": None,
-            "image": None
+            "image": None,
         }
 
         # find integer value for year. Assume text always begins with year.
@@ -104,10 +102,7 @@ def parse_feed_item(feed_item):
                     size = float(size.strip("x"))
                     tmp.append((size, url))
                 url = sorted(tmp)[-1][1]
-                entry["image"] = {
-                    "url": url,
-                    "alt_text": image.get("alt")
-                }
+                entry["image"] = {"url": url, "alt_text": image.get("alt")}
                 continue
 
             # Assume a link with only numbers is a year link
@@ -123,10 +118,11 @@ def parse_feed_item(feed_item):
         entries.append(entry)
     return entries
 
+
 def prepare_toot(item):
     """
-        Take an item as returned by parse_feed_item and format
-        a toot.
+    Take an item as returned by parse_feed_item and format
+    a toot.
     """
     toot_text = "Heute vor {0} Jahren:\n\n".format(
         datetime.date.today().year - item["year"]
@@ -138,11 +134,12 @@ def prepare_toot(item):
 
     return toot_text
 
+
 def get_feed_entry_for_today():
     """
-        Get the feed entry for today.
-        First tries to load the entry from a cached file and falls
-        back to actually loading the feed from wikipedia.
+    Get the feed entry for today.
+    First tries to load the entry from a cached file and falls
+    back to actually loading the feed from wikipedia.
     """
     try:
         with open(CACHE_FILE) as f:
@@ -151,7 +148,10 @@ def get_feed_entry_for_today():
     except IOError:
         data = None
 
-    if data is None or parse_date_from_timestamp(data["updated"]) != datetime.date.today():
+    if (
+        data is None
+        or parse_date_from_timestamp(data["updated"]) != datetime.date.today()
+    ):
         data = load_feed_and_get_entry_for_today()
 
     with open(CACHE_FILE, "w") as f:
@@ -159,11 +159,12 @@ def get_feed_entry_for_today():
 
     return data
 
+
 def create_media_post(entry, mastodon):
     """
-        Takes an entry and a mastodon instance, generates a media post with the entry["image"]
-        if present and returns the obtained media_dict.
-        If no image is present, returns None.
+    Takes an entry and a mastodon instance, generates a media post with the entry["image"]
+    if present and returns the obtained media_dict.
+    If no image is present, returns None.
     """
     if entry["image"] is None:
         return None
@@ -175,21 +176,31 @@ def create_media_post(entry, mastodon):
         urllib.request.urlretrieve(url, image_filename)
 
         # create media post
-        return mastodon.media_post(image_filename, description=entry["image"]["alt_text"])
+        return mastodon.media_post(
+            image_filename, description=entry["image"]["alt_text"]
+        )
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Toot about events on this day')
-    parser.add_argument('--dry-run', action="store_true", help="If given only prints the content of the toot")
+    parser = argparse.ArgumentParser(description="Toot about events on this day")
     parser.add_argument(
-        '--item', type=int,
-        help="Selects the feed item to be processed. If not given item is selected according to schedule."
+        "--dry-run",
+        action="store_true",
+        help="If given only prints the content of the toot",
+    )
+    parser.add_argument(
+        "--item",
+        type=int,
+        help="Selects the feed item to be processed. If not given item is selected according to schedule.",
     )
 
     args = parser.parse_args()
     if not args.dry_run:
         access_token = os.environ.get("MASTODON_ACCESS_TOKEN", None)
         if access_token is None:
-            raise RuntimeError("Mastodon access token missing. Please provide it as environment variable MASTODON_ACCESS_TOKEN")
+            raise RuntimeError(
+                "Mastodon access token missing. Please provide it as environment variable MASTODON_ACCESS_TOKEN"
+            )
     feed_item = get_feed_entry_for_today()
 
     entries = parse_feed_item(feed_item)
@@ -206,11 +217,12 @@ if __name__ == "__main__":
             print(toot_text)
         else:
             mastodon = Mastodon(
-                api_base_url = 'https://chaos.social',
-                access_token=args.access_token
+                api_base_url="https://chaos.social", access_token=args.access_token
             )
             media_dict = create_media_post(entry, mastodon)
             mastodon.status_post(toot_text, visibility="unlisted", media_ids=media_dict)
-            print("{0}: Successfully tooted!".format(datetime.datetime.now().isoformat()))
+            print(
+                "{0}: Successfully tooted!".format(datetime.datetime.now().isoformat())
+            )
     else:
         print("{0}: Nothing to toot about.".format(datetime.datetime.now().isoformat()))

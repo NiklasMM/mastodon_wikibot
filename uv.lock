@@ -4,15 +4,15 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "beautifulsoup4"
-version = "4.14.0"
+version = "4.14.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "soupsieve" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/bb/3387a5bf72121e1e2cd9223d20598c2fb599ef63517ff3e6ec526d8c4928/beautifulsoup4-4.14.0.tar.gz", hash = "sha256:e6150e53c8a52fd4f3b9b28839f8f0fb7c7f029d3c953a50b1762b0947c3cf85", size = 625697, upload-time = "2025-09-27T17:22:17.532Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/e9/df2358efd7659577435e2177bfa69cba6c33216681af51a707193dec162a/beautifulsoup4-4.14.2.tar.gz", hash = "sha256:2a98ab9f944a11acee9cc848508ec28d9228abfd522ef0fad6a02a72e0ded69e", size = 625822, upload-time = "2025-09-29T10:05:42.613Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/28/4f/3e23dfc8b4951103028d30f29e17aa703a87564abd71bc405964c36326dc/beautifulsoup4-4.14.0-py3-none-any.whl", hash = "sha256:aee96fbccdf2d2a8d1288b2afa51fc76bb60823b7881a50fb1ed5f711d1a7d73", size = 106466, upload-time = "2025-09-27T17:22:16.13Z" },
+    { url = "https://files.pythonhosted.org/packages/94/fe/3aed5d0be4d404d12d36ab97e2f1791424d9ca39c2f754a6285d59a3b01d/beautifulsoup4-4.14.2-py3-none-any.whl", hash = "sha256:5ef6fa3a8cbece8488d66985560f97ed091e22bbc4e9c2338508a9d5de6d4515", size = 106392, upload-time = "2025-09-29T10:05:43.771Z" },
 ]
 
 [[package]]
@@ -158,20 +158,19 @@ wheels = [
 
 [[package]]
 name = "mastodon-py"
-version = "1.5.1"
+version = "2.1.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "blurhash" },
     { name = "decorator" },
     { name = "python-dateutil" },
-    { name = "python-magic" },
-    { name = "pytz" },
+    { name = "python-magic", marker = "sys_platform != 'win32'" },
+    { name = "python-magic-bin", marker = "sys_platform == 'win32'" },
     { name = "requests" },
-    { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/cf/7db7cd302c747f2f10a6037a220f6a72ac3a3c15862aee4ea8d7c64a2645/Mastodon.py-1.5.1.tar.gz", hash = "sha256:2afddbad8b5d7326fcc8a8f8c62bfe956e34627f516b06c6694fc8c8fedc33ee", size = 1225203, upload-time = "2020-03-14T18:17:09.694Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/88/ec/1eccba4dda197e6993dd1b8a4fa5728f8ed64d3ba54d61ebfe2420a20f4e/mastodon_py-2.1.4.tar.gz", hash = "sha256:6602e9ca4db37c70b5adae5964d02e9a529f6cc8473947a314261008add208a5", size = 11636752, upload-time = "2025-09-23T09:39:04.156Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/80/f12b205fc529fff8e3245fe8e6cafb870f1783476449d3ea2a32b40928c5/Mastodon.py-1.5.1-py2.py3-none-any.whl", hash = "sha256:cc454cac0ed1ae4f105f7399ea53f5b31a1be5075d1882f47162d2e78a9e4064", size = 36682, upload-time = "2020-03-14T18:17:06.842Z" },
+    { url = "https://files.pythonhosted.org/packages/02/eb/23afadb9a0aee04a52adfc010384da267b42b66be6cbb3ed2d3c3edc20f4/mastodon_py-2.1.4-py3-none-any.whl", hash = "sha256:447ce341cf9a67e70789abf6a2c1a54b52cd2cd021818ccb32c52f34804c7896", size = 123469, upload-time = "2025-09-23T09:39:02.515Z" },
 ]
 
 [[package]]
@@ -196,7 +195,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.0" },
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "feedparser", specifier = ">=6.0.12" },
-    { name = "mastodon-py", specifier = "==1.5.1" },
+    { name = "mastodon-py", specifier = ">=2.1.4" },
 ]
 
 [package.metadata.requires-dev]
@@ -272,21 +271,21 @@ wheels = [
 ]
 
 [[package]]
+name = "python-magic-bin"
+version = "0.4.14"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5a/5d/10b9ac745d9fd2f7151a2ab901e6bb6983dbd70e87c71111f54859d1ca2e/python_magic_bin-0.4.14-py2.py3-none-win32.whl", hash = "sha256:34a788c03adde7608028203e2dbb208f1f62225ad91518787ae26d603ae68892", size = 397784, upload-time = "2017-10-02T16:30:15.806Z" },
+    { url = "https://files.pythonhosted.org/packages/07/c2/094e3d62b906d952537196603a23aec4bcd7c6126bf80eb14e6f9f4be3a2/python_magic_bin-0.4.14-py2.py3-none-win_amd64.whl", hash = "sha256:90be6206ad31071a36065a2fc169c5afb5e0355cbe6030e87641c6c62edc2b69", size = 409299, upload-time = "2017-10-02T16:30:18.545Z" },
+]
+
+[[package]]
 name = "pytokens"
 version = "0.1.10"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/30/5f/e959a442435e24f6fb5a01aec6c657079ceaca1b3baf18561c3728d681da/pytokens-0.1.10.tar.gz", hash = "sha256:c9a4bfa0be1d26aebce03e6884ba454e842f186a59ea43a6d3b25af58223c044", size = 12171, upload-time = "2025-02-19T14:51:22.001Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/e5/63bed382f6a7a5ba70e7e132b8b7b8abbcf4888ffa6be4877698dcfbed7d/pytokens-0.1.10-py3-none-any.whl", hash = "sha256:db7b72284e480e69fb085d9f251f66b3d2df8b7166059261258ff35f50fb711b", size = 12046, upload-time = "2025-02-19T14:51:18.694Z" },
-]
-
-[[package]]
-name = "pytz"
-version = "2025.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/bf/abbd3cdfb8fbc7fb3d4d38d320f2441b1e7cbe29be4f23797b4a2b5d8aac/pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3", size = 320884, upload-time = "2025-03-25T02:25:00.538Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/c4/34e93fe5f5429d7570ec1fa436f1986fb1f00c3e0f43a589fe2bbcd22c3f/pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00", size = 509225, upload-time = "2025-03-25T02:24:58.468Z" },
 ]
 
 [[package]]

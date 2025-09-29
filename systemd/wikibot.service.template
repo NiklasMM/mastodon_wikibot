@@ -1,0 +1,5 @@
+[Unit]
+Description=A simple bot for mastodon, which posts the content of Wikipedia's 'on this day' feed during the day.
+[Service]
+WorkingDirectory={repo root}
+ExecStart=/home/username/venv/bin/python /home/username/app.py

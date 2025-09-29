@@ -1,13 +1,15 @@
 import argparse
 import datetime
 import json
+import os
 import re
 import tempfile
 import urllib.request
 
 from mastodon import Mastodon
 import feedparser
-
+from dotenv import load_dotenv
+load_dotenv()
 
 FEED_URL = 'https://de.wikipedia.org/w/api.php?action=featuredfeed&feed=onthisday&feedformat=atom'
 CACHE_FILE = "/tmp/wikibot.cache"
@@ -182,9 +184,12 @@ if __name__ == "__main__":
         '--item', type=int,
         help="Selects the feed item to be processed. If not given item is selected according to schedule."
     )
-    parser.add_argument('access_token', type=str, help='access token for the targeted Mastodon account.')
 
     args = parser.parse_args()
+    if not args.dry_run:
+        access_token = os.environ.get("MASTODON_ACCESS_TOKEN", None)
+        if access_token is None:
+            raise RuntimeError("Mastodon access token missing. Please provide it as environment variable MASTODON_ACCESS_TOKEN")
     feed_item = get_feed_entry_for_today()
 
     entries = parse_feed_item(feed_item)

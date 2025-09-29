@@ -1,1 +1,4 @@
 __pycache__
+systemd/wikibot.service
+.venv
+.env

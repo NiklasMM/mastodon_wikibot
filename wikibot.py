@@ -195,6 +195,8 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    access_token = None
+
     if not args.dry_run:
         access_token = os.environ.get("MASTODON_ACCESS_TOKEN", None)
         if access_token is None:
@@ -217,7 +219,7 @@ if __name__ == "__main__":
             print(toot_text)
         else:
             mastodon = Mastodon(
-                api_base_url="https://chaos.social", access_token=args.access_token
+                api_base_url="https://chaos.social", access_token=access_token
             )
             media_dict = create_media_post(entry, mastodon)
             mastodon.status_post(toot_text, visibility="unlisted", media_ids=media_dict)

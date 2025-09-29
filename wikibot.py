@@ -32,7 +32,7 @@ def load_feed_and_get_entry_for_today():
     Loads the feed and returns the feed item for today.
     Raises Exception if no entry for today can be found
     """
-    feed = feedparser.parse(FEED_URL)
+    feed = feedparser.parse(FEED_URL, sanitize_html=False)
 
     for entry in feed["items"]:
         # The "updated" timestamp always corresponds to the day the entry is about
@@ -62,8 +62,15 @@ def parse_feed_item(feed_item):
     entries = []
 
     for li in soup.find_all("li"):
+        # Years with less than 4 digits contain a span holding padding zeros before the year
+        # They are styled with "visibility:hidden", but would still show up in .get_text()
+        # That's why we need to remove them.
+        for x in li.find_all("span", attrs={"style": "visibility:hidden;"}):
+            x.extract()
+
         entry = {
-            "text": li.get_text(),
+            # get text and remove soft hyphens
+            "text": li.get_text().replace("­", ""),
             "links": [],
             "year_link": None,
             "year": None,

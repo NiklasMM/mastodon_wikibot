@@ -22,7 +22,7 @@ WIKIPEDIA_PREFIX = "https://de.wikipedia.org"
 TOOT_SCHEDULE = {8: 0, 10: 1, 12: 2, 14: 3, 16: 4}
 
 
-def parse_date_from_timestamp(timestamp):
+def parse_date_from_timestamp(timestamp: str) -> datetime.date:
     """Parses a date object from a feed timestamp"""
     return datetime.datetime.strptime(timestamp, r"%Y-%m-%dT%H:%M:%SZ").date()
 
@@ -42,7 +42,7 @@ def load_feed_and_get_entry_for_today():
         raise Exception("Could not find feed entry for today.")
 
 
-def parse_feed_item(feed_item):
+def parse_feed_item(feed_item: dict) -> dict:
     """
     Takes a dict representing a feed item for today and generates
     a strucutred dict from it:
@@ -129,7 +129,7 @@ def parse_feed_item(feed_item):
     return entries
 
 
-def prepare_toot(item):
+def prepare_toot(item: dict) -> str:
     """
     Take an item as returned by parse_feed_item and format
     a toot.
@@ -170,7 +170,7 @@ def get_feed_entry_for_today():
     return data
 
 
-def create_media_post(entry, mastodon):
+def create_media_post(entry: dict, mastodon: Mastodon):
     """
     Takes an entry and a mastodon instance, generates a media post with the entry["image"]
     if present and returns the obtained media_dict.
